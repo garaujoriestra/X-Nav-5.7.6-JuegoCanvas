@@ -3,6 +3,10 @@
 // Slight modifications by Gregorio Robles <grex@gsyc.urjc.es>
 // to meet the criteria of a canvas class for DAT @ Univ. Rey Juan Carlos
 
+
+var iteratione = 0;
+var dificultad = 5;
+var nivel = 1;
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
@@ -26,6 +30,14 @@ heroImage.onload = function () {
 };
 heroImage.src = "images/hero.png";
 
+// Stone image
+var stoneReady = false;
+var stoneImage = new Image();
+stoneImage.onload = function () {
+	stoneReady = true;
+};
+stoneImage.src = "images/stone.png";
+
 // princess image
 var princessReady = false;
 var princessImage = new Image();
@@ -34,12 +46,27 @@ princessImage.onload = function () {
 };
 princessImage.src = "images/princess.png";
 
+// princess image
+var monsterReady = false;
+var monsterImage = new Image();
+monsterImage.onload = function () {
+	monsterReady = true;
+};
+monsterImage.src = "images/monster.png";
+
 // Game objects
 var hero = {
 	speed: 256 // movement in pixels per second
 };
 var princess = {};
+var stone = {};
+var monster = {
+	speed : 128
+};
 var princessesCaught = 0;
+// localStorage.getItem("storeage");
+// if (princessesCaught == null)
+// 	princessesCaught = 0;
 
 // Handle keyboard controls
 var keysDown = {};
@@ -58,23 +85,110 @@ var reset = function () {
 	hero.y = canvas.height / 2;
 
 	// Throw the princess somewhere on the screen randomly
-	princess.x = 32 + (Math.random() * (canvas.width - 64));
-	princess.y = 32 + (Math.random() * (canvas.height - 64));
+	princess.x = 32 + (Math.random() * (canvas.width - 90));
+	princess.y = 32 + (Math.random() * (canvas.height - 90));
+
+	stone.x = 30 + (Math.random() * (canvas.width - 90));
+	stone.y = 30 + (Math.random() * (canvas.height - 90));
+
+	monster.x = 30 + (Math.random() * (canvas.width - 90));
+	monster.y = 30 + (Math.random() * (canvas.height - 90));
+
+
+	if(
+		stone.x <=(princess.x + 16)
+		&& princess.x <= (stone.x + 16)
+		&& stone.y <= (princess.y + 16)
+		&& princess.y <= (stone.y + 32)
+
+	){
+		reset();
+	}
+	if(
+		stone.x <=(hero.x + 16)
+		&& hero.x <= (stone.x + 16)
+		&& stone.y <= (hero.y + 16)
+		&& hero.y <= (stone.y + 32)
+
+	){
+		reset();
+	}
+	if(
+		hero.x <=(monster.x + 16)
+		&& monster.x <= (hero.x + 16)
+		&& hero.y <= (monster.y + 16)
+		&& monster.y <= (hero.y + 32)
+
+	){
+		reset();
+	}
+
+
+	if(
+		monster.x <=(princess.x + 16)
+		&& princess.x <= (monster.x + 16)
+		&& monster.y <= (princess.y + 16)
+		&& princess.y <= (monster.y + 32)
+
+	){
+		reset();
+	}
+
+
+	if(
+		monster.x <=(stone.x + 16)
+		&& stone.x <= (monster.x + 16)
+		&& monster.y <= (stone.y + 16)
+		&& stone.y <= (monster.y + 32)
+
+	){
+		reset();
+	}
 };
+
+
 
 // Update game objects
 var update = function (modifier) {
-	if (38 in keysDown) { // Player holding up
-		hero.y -= hero.speed * modifier;
+	if (38 in keysDown) {
+		if((hero.y <= 26) || (stone.x <= (hero.x + 20)
+		&& hero.x <= (stone.x + 20)
+		&& stone.y <= (hero.y + 20)
+		&& hero.y <= (stone.y + 40))){
+			hero.y += 1;
+		}else{
+			hero.y -= hero.speed * modifier;
+		} // Player holding up
 	}
 	if (40 in keysDown) { // Player holding down
-		hero.y += hero.speed * modifier;
+		if((hero.y >= 416) || (stone.x <= (hero.x + 20)
+		&& hero.x <= (stone.x + 20)
+		&& stone.y <= (hero.y + 20)
+		&& hero.y <= (stone.y + 40))){
+			hero.y -= 1;
+		}else{
+			hero.y += hero.speed * modifier;
+		}
 	}
 	if (37 in keysDown) { // Player holding left
-		hero.x -= hero.speed * modifier;
+		if((hero.x <= 26) || (stone.x <= (hero.x + 20)
+		&& hero.x <= (stone.x + 20)
+		&& stone.y <= (hero.y + 20)
+		&& hero.y <= (stone.y + 40))){
+			hero.x += 1;
+		}else{
+			hero.x -= hero.speed * modifier;
+		}
 	}
 	if (39 in keysDown) { // Player holding right
-		hero.x += hero.speed * modifier;
+		if((hero.x >= 454) || (stone.x <= (hero.x + 20)
+		&& hero.x <= (stone.x + 20)
+		&& stone.y <= (hero.y + 20)
+		&& hero.y <= (stone.y + 40))){
+			hero.x -= 1;
+		}else{
+			hero.x += hero.speed * modifier;
+		}
 	}
 
 	// Are they touching?
@@ -84,9 +198,20 @@ var update = function (modifier) {
 		&& hero.y <= (princess.y + 16)
 		&& princess.y <= (hero.y + 32)
 	) {
+		if(princessesCaught % 2 == 0 && princessesCaught > 0){
+			if(dificultad != 1)
+				dificultad = dificultad - 1;
+			nivel = nivel + 1;
+		}
 		++princessesCaught;
+		//localStorage.setItem("storeage", princessesCaught);
 		reset();
+
+		
 	}
+
+
+	
 };
 
 // Draw everything
@@ -103,6 +228,14 @@ var render = function () {
 		ctx.drawImage(princessImage, princess.x, princess.y);
 	}
 
+	if(stoneReady){
+		ctx.drawImage(stoneImage,stone.x, stone.y);
+	}
+
+	if(monsterReady){
+		ctx.drawImage(monsterImage,monster.x, monster.y);
+	}
+
 	// Score
 	ctx.fillStyle = "rgb(250, 250, 250)";
 	ctx.font = "24px Helvetica";
@@ -113,10 +246,42 @@ var render = function () {
 
 // The main game loop
 var main = function () {
+
+	if (
+		hero.x <= (monster.x + 16)
+		&& monster.x <= (hero.x + 16)
+		&& hero.y <= (monster.y + 16)
+		&& monster.y <= (hero.y + 32)
+	) {
+		//localStorage.setItem("storeage", princessesCaught);
+		princessesCaught = 0;
+		window.location.reload(); 
+	}
+
+	iteratione++;
+
+	if(iteratione % dificultad == 0){
+		if((monster.x - hero.x) > 0){
+			monster.x = monster.x - 1;
+		}else{
+			monster.x = monster.x + 1;
+		}
+
+		if((monster.y - hero.y) > 0){
+			monster.y = monster.y - 1;
+		}else{
+			monster.y = monster.y + 1;
+		}
+	}
+
+	
+
+
 	var now = Date.now();
 	var delta = now - then;
 
 	update(delta / 1000);
+
 	render();
 
 	then = now;
